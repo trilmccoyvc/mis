@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIS Velocity Multiplication Framework</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel Standalone for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide React Icons -->
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f8fafc;
+        }
+        
+        /* Ensure iframe compatibility */
+        html, body {
+            height: 100%;
+            overflow-x: auto;
+        }
+        
+        #root {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { ArrowRight, Zap, Users, Layout, Bot, Settings } = lucideReact;
+
+        const VelocityMultiplicationWaterfall = () => {
+          const [animationStep, setAnimationStep] = useState(0);
+          const [showDetails, setShowDetails] = useState(null);
+
+          const multipliers = [
+            {
+              id: 'baseline',
+              title: 'Baseline',
+              value: 1,
+              cumulative: 1,
+              icon: Users,
+              color: 'bg-gray-500',
+              lightColor: 'bg-gray-100',
+              description: 'Traditional development',
+              details: [
+                'Manual coding and testing',
+                'Sequential development phases',
+                'Human-limited productivity',
+                'Quality vs speed tradeoffs'
+              ]
+            },
+            {
+              id: 'ai',
+              title: 'AI Generation',
+              value: 5,
+              cumulative: 5,
+              icon: Bot,
+              color: 'bg-blue-600',
+              lightColor: 'bg-blue-100',
+              description: 'AI-first development pipeline',
+              details: [
+                '5x faster code generation',
+                'Consistent quality patterns',
+                'Reduced human error rates',
+                'Strategic human oversight'
+              ]
+            },
+            {
+              id: 'parallel',
+              title: 'Parallel Streams',
+              value: 3,
+              cumulative: 15,
+              icon: Layout,
+              color: 'bg-green-600',
+              lightColor: 'bg-green-100',
+              description: 'Concurrent development workflows',
+              details: [
+                '3 parallel development streams',
+                'Eliminated sequential dependencies',
+                'Automated integration validation',
+                'Linear team scaling'
+              ]
+            },
+            {
+              id: 'templates',
+              title: 'Template Architecture',
+              value: 2,
+              cumulative: 30,
+              icon: Settings,
+              color: 'bg-orange-600',
+              lightColor: 'bg-orange-100',
+              description: 'Reusable component patterns',
+              details: [
+                '2x minimum acceleration',
+                'Architectural best practices',
+                'Quality consistency',
+                'Knowledge scaling'
+              ]
+            },
+            {
+              id: 'automation',
+              title: 'Process Automation',
+              value: 1.8,
+              cumulative: 54,
+              icon: Zap,
+              color: 'bg-purple-600',
+              lightColor: 'bg-purple-100',
+              description: 'Automated QA and deployment',
+              details: [
+                'Autonomous quality assurance',
+                'Automated testing generation',
+                'Continuous deployment',
+                'Performance optimization'
+              ]
+            }
+          ];
+
+          const maxHeight = 400;
+          const maxCumulative = Math.max(...multipliers.map(m => m.cumulative));
+
+          useEffect(() => {
+            const timer = setInterval(() => {
+              setAnimationStep(prev => (prev + 1) % (multipliers.length + 1));
+            }, 2000);
+            return () => clearInterval(timer);
+          }, []);
+
+          const getBarHeight = (cumulative, isAnimated = true) => {
+            const targetHeight = (cumulative / maxCumulative) * maxHeight;
+            return isAnimated && animationStep < multipliers.findIndex(m => m.cumulative === cumulative) + 1
+              ? 0
+              : targetHeight;
+          };
+
+          const MultiplierCard = ({ multiplier, index, isActive }) => {
+            const Icon = multiplier.icon;
+            const isDetailed = showDetails === multiplier.id;
+            
+            return (
+              React.createElement('div', { className: "flex flex-col items-center" },
+                // Bar
+                React.createElement('div', { 
+                  className: "relative mb-4", 
+                  style: { height: maxHeight } 
+                },
+                  React.createElement('div', { className: "absolute bottom-0 w-20 transition-all duration-1000 ease-out flex flex-col" },
+                    // Cumulative bar
+                    React.createElement('div', {
+                      className: `w-full ${multiplier.color} transition-all duration-1000 ease-out flex items-end justify-center relative`,
+                      style: { height: `${getBarHeight(multiplier.cumulative)}px` }
+                    },
+                      // Cumulative value label
+                      React.createElement('div', { 
+                        className: "absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white border-2 border-gray-300 rounded-lg px-2 py-1 text-sm font-bold shadow-lg" 
+                      }, `${multiplier.cumulative}x`),
+                      
+                      // Individual multiplier highlight
+                      multiplier.id !== 'baseline' && React.createElement('div', { 
+                        className: "absolute inset-0 bg-white bg-opacity-30 flex items-center justify-center" 
+                      },
+                        React.createElement('span', { 
+                          className: "text-white font-bold text-lg" 
+                        }, `×${multiplier.value}`)
+                      )
+                    )
+                  ),
+                  
+                  // Connection arrow to next bar
+                  index < multipliers.length - 1 && React.createElement('div', { 
+                    className: "absolute -right-12 top-1/2 transform -translate-y-1/2" 
+                  },
+                    React.createElement(ArrowRight, {
+                      className: `w-6 h-6 transition-opacity duration-500 ${
+                        animationStep > index ? 'text-gray-600 opacity-100' : 'text-gray-300 opacity-50'
+                      }`
+                    })
+                  )
+                ),
+
+                // Multiplier info card
+                React.createElement('div', {
+                  className: `w-32 p-3 rounded-lg border-2 cursor-pointer transition-all duration-300 ${
+                    isActive 
+                      ? `${multiplier.color} text-white border-transparent shadow-lg` 
+                      : `${multiplier.lightColor} text-gray-800 border-gray-200 hover:border-gray-300`
+                  }`,
+                  onClick: () => setShowDetails(isDetailed ? null : multiplier.id)
+                },
+                  React.createElement('div', { className: "flex flex-col items-center text-center" },
+                    React.createElement(Icon, { 
+                      className: `w-6 h-6 mb-2 ${isActive ? 'text-white' : 'text-gray-600'}` 
+                    }),
+                    React.createElement('h3', { 
+                      className: "font-semibold text-sm mb-1" 
+                    }, multiplier.title),
+                    React.createElement('p', { 
+                      className: `text-xs ${isActive ? 'text-white opacity-90' : 'text-gray-600'}` 
+                    }, multiplier.description)
+                  )
+                ),
+
+                // Detailed breakdown
+                isDetailed && React.createElement('div', { 
+                  className: "mt-4 bg-white border-2 border-gray-200 rounded-lg p-4 shadow-lg w-64 z-10 absolute top-full" 
+                },
+                  React.createElement('h4', { 
+                    className: "font-bold text-gray-800 mb-2" 
+                  }, `${multiplier.title} Details:`),
+                  React.createElement('ul', { 
+                    className: "text-sm text-gray-600 space-y-1" 
+                  }, 
+                    multiplier.details.map((detail, i) => 
+                      React.createElement('li', { 
+                        key: i, 
+                        className: "flex items-start" 
+                      },
+                        React.createElement('span', { 
+                          className: "w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 mr-2 flex-shrink-0" 
+                        }),
+                        detail
+                      )
+                    )
+                  )
+                )
+              )
+            );
+          };
+
+          return (
+            React.createElement('div', { className: "w-full max-w-6xl mx-auto p-6 bg-white" },
+              React.createElement('div', { className: "text-center mb-8" },
+                React.createElement('h2', { 
+                  className: "text-3xl font-bold text-gray-800 mb-2" 
+                }, "MIS Velocity Multiplication Framework"),
+                React.createElement('p', { 
+                  className: "text-gray-600 text-lg" 
+                }, "How 5× × 3× × 2× × 1.8× = 54× development acceleration")
+              ),
+
+              // Waterfall chart
+              React.createElement('div', { className: "relative bg-gray-50 rounded-xl p-8 mb-8" },
+                React.createElement('div', { 
+                  className: "flex justify-around items-end relative", 
+                  style: { minHeight: maxHeight + 120 } 
+                },
+                  multipliers.map((multiplier, index) =>
+                    React.createElement(MultiplierCard, {
+                      key: multiplier.id,
+                      multiplier: multiplier,
+                      index: index,
+                      isActive: animationStep > index
+                    })
+                  )
+                )
+              ),
+
+              // Mathematical breakdown
+              React.createElement('div', { className: "grid md:grid-cols-2 gap-8" },
+                React.createElement('div', { className: "bg-blue-50 rounded-lg p-6" },
+                  React.createElement('h3', { 
+                    className: "text-xl font-bold text-blue-800 mb-4" 
+                  }, "Theoretical Maximum"),
+                  React.createElement('div', { className: "space-y-3" },
+                    React.createElement('div', { className: "flex justify-between items-center" },
+                      React.createElement('span', { className: "text-blue-700" }, "AI Generation:"),
+                      React.createElement('span', { className: "font-bold text-blue-800" }, "5x")
+                    ),
+                    React.createElement('div', { className: "flex justify-between items-center" },
+                      React.createElement('span', { className: "text-blue-700" }, "Parallel Streams:"),
+                      React.createElement('span', { className: "font-bold text-blue-800" }, "3x")
+                    ),
+                    React.createElement('div', { className: "flex justify-between items-center" },
+                      React.createElement('span', { className: "text-blue-700" }, "Template Architecture:"),
+                      React.createElement('span', { className: "font-bold text-blue-800" }, "2x")
+                    ),
+                    React.createElement('div', { className: "flex justify-between items-center" },
+                      React.createElement('span', { className: "text-blue-700" }, "Process Automation:"),
+                      React.createElement('span', { className: "font-bold text-blue-800" }, "1.8x")
+                    ),
+                    React.createElement('div', { className: "border-t border-blue-200 pt-3 flex justify-between items-center" },
+                      React.createElement('span', { className: "text-blue-800 font-semibold" }, "Theoretical Total:"),
+                      React.createElement('span', { className: "font-bold text-xl text-blue-800" }, "54x")
+                    )
+                  )
+                ),
+
+                React.createElement('div', { className: "bg-green-50 rounded-lg p-6" },
+                  React.createElement('h3', { 
+                    className: "text-xl font-bold text-green-800 mb-4" 
+                  }, "Practical Implementation"),
+                  React.createElement('div', { className: "space-y-3" },
+                    React.createElement('div', { className: "flex justify-between items-center" },
+                      React.createElement('span', { className: "text-green-700" }, "Integration Efficiency:"),
+                      React.createElement('span', { className: "font-bold text-green-800" }, "30%")
+                    ),
+                    React.createElement('div', { className: "flex justify-between items-center" },
+                      React.createElement('span', { className: "text-green-700" }, "Learning Curve Factor:"),
+                      React.createElement('span', { className: "font-bold text-green-800" }, "85%")
+                    ),
+                    React.createElement('div', { className: "flex justify-between items-center" },
+                      React.createElement('span', { className: "text-green-700" }, "Real-world Constraints:"),
+                      React.createElement('span', { className: "font-bold text-green-800" }, "70%")
+                    ),
+                    React.createElement('div', { className: "border-t border-green-200 pt-3 flex justify-between items-center" },
+                      React.createElement('span', { className: "text-green-800 font-semibold" }, "Practical Range:"),
+                      React.createElement('span', { className: "font-bold text-xl text-green-800" }, "16-30x")
+                    )
+                  )
+                )
+              ),
+
+              // ROI Impact
+              React.createElement('div', { className: "mt-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-8 text-white" },
+                React.createElement('h3', { 
+                  className: "text-2xl font-bold mb-4" 
+                }, "Business Impact"),
+                React.createElement('div', { className: "grid md:grid-cols-3 gap-6" },
+                  React.createElement('div', { className: "text-center" },
+                    React.createElement('div', { className: "text-3xl font-bold mb-2" }, "85-95%"),
+                    React.createElement('div', { className: "text-purple-100" }, "Cost Reduction")
+                  ),
+                  React.createElement('div', { className: "text-center" },
+                    React.createElement('div', { className: "text-3xl font-bold mb-2" }, "16-30x"),
+                    React.createElement('div', { className: "text-purple-100" }, "Faster Delivery")
+                  ),
+                  React.createElement('div', { className: "text-center" },
+                    React.createElement('div', { className: "text-3xl font-bold mb-2" }, "2-4x"),
+                    React.createElement('div', { className: "text-purple-100" }, "Quality Improvement")
+                  )
+                ),
+                
+                React.createElement('div', { className: "mt-6 text-center" },
+                  React.createElement('p', { 
+                    className: "text-lg text-purple-100" 
+                  }, "Transform software development from cost center to competitive advantage")
+                )
+              )
+            )
+          );
+        };
+
+        ReactDOM.render(React.createElement(VelocityMultiplicationWaterfall), document.getElementById('root'));
+    </script>
+</body>
+</html>

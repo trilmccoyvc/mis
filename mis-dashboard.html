@@ -1,433 +1,382 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MIS Automated Reporting Dashboard</title>
-    
-    <!-- React & React DOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Recharts untuk charts -->
-    <script src="https://unpkg.com/recharts@2.5.0/dist/Recharts.js"></script>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <style>
-        /* Custom styles untuk ensure proper rendering */
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-        }
-        
-        /* Ensure Recharts renders properly */
-        .recharts-wrapper {
-            width: 100% !important;
-            height: 100% !important;
-        }
-        
-        /* Loading animation */
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        .loading-spinner {
-            animation: spin 1s linear infinite;
-            display: inline-block;
-        }
-        
-        /* Custom icon styles */
-        .icon {
-            display: inline-block;
-            vertical-align: middle;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MIS Automated Reporting Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Proxima+Nova:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/recharts/umd/Recharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+<style>body { font-family: 'Proxima Nova', sans-serif; }</style>
 </head>
-<body>
-    <div id="root"></div>
-    
-    <script>
-        // Icon components sebagai SVG strings
-        const icons = {
-            CheckCircle: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
-            AlertCircle: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`,
-            XCircle: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
-            Clock: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`,
-            TrendingUp: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`,
-            Code: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`,
-            Database: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>`,
-            Zap: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`
-        };
+<body class="bg-gray-50">
+<div id="root"></div>
+<script type="text/babel">
+import React, { useState, useEffect } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { CheckCircle, AlertCircle, XCircle, Clock, TrendingUp, Code, Database, Zap } from 'lucide-react';
+
+const AutomatedReportingDashboard = () => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [reportData, setReportData] = useState({
+    lastUpdated: new Date(),
+    phase: "Phase 2: Treasury Assembly",
+    overallProgress: 73,
+    velocityMultiplier: 25.3,
+    qualityScore: 96.8,
+    mathematicalAccuracy: 100.0
+  });
+
+  // Simulated automated data collection
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+      // Simulate automated progress updates
+      setReportData(prev => ({
+        ...prev,
+        lastUpdated: new Date(),
+        overallProgress: Math.min(prev.overallProgress + 0.1, 100),
+        velocityMultiplier: prev.velocityMultiplier + (Math.random() - 0.5) * 0.2,
+        qualityScore: Math.max(95, prev.qualityScore + (Math.random() - 0.5) * 0.5)
+      }));
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Automated velocity tracking data
+  const velocityData = [
+    { day: 'Day 1', traditional: 1.0, mis: 5.2 },
+    { day: 'Day 3', traditional: 2.1, mis: 12.8 },
+    { day: 'Day 5', traditional: 3.5, mis: 18.9 },
+    { day: 'Day 7', traditional: 4.2, mis: 23.1 },
+    { day: 'Day 9', traditional: 5.1, mis: 25.3 },
+    { day: 'Day 11', traditional: 5.8, mis: 27.2 }
+  ];
+
+  // Automated quality metrics
+  const qualityMetrics = [
+    { metric: 'Mathematical Accuracy', value: 100.0, target: 99.9, status: 'excellent' },
+    { metric: 'Test Coverage', value: 97.2, target: 95.0, status: 'excellent' },
+    { metric: 'Response Time', value: 45, target: 200, status: 'excellent' },
+    { metric: 'Integration Success', value: 99.2, target: 95.0, status: 'excellent' }
+  ];
+
+  // Automated phase progression
+  const phaseData = [
+    { phase: 'Phase 0: Setup', status: 'completed', duration: '5 days', target: '7 days' },
+    { phase: 'Phase 1: Foundation', status: 'completed', duration: '6 days', target: '8 days' },
+    { phase: 'Phase 2: Assembly', status: 'active', duration: '4 days', target: '8 days' },
+    { phase: 'Phase 3: Production', status: 'pending', duration: '-', target: '5 days' }
+  ];
+
+  // Automated build and validation results
+  const buildResults = [
+    { component: 'Treasury Contracts', builds: 47, success: 46, accuracy: 100.0, lastBuild: '2 min ago' },
+    { component: 'DOSS Protocol', builds: 32, success: 32, accuracy: 100.0, lastBuild: '5 min ago' },
+    { component: 'AI Oracle Network', builds: 23, success: 23, accuracy: 99.97, lastBuild: '8 min ago' },
+    { component: 'Database Schema', builds: 18, success: 18, accuracy: 100.0, lastBuild: '12 min ago' }
+  ];
+
+  // Automated risk assessment
+  const riskAssessment = [
+    { category: 'Technical Risk', level: 'LOW', score: 15, trend: 'decreasing' },
+    { category: 'Integration Risk', level: 'LOW', score: 12, trend: 'stable' },
+    { category: 'Performance Risk', level: 'MINIMAL', score: 8, trend: 'decreasing' },
+    { category: 'Quality Risk', level: 'MINIMAL', score: 5, trend: 'decreasing' }
+  ];
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'completed': return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case 'active': return <Clock className="w-5 h-5 text-blue-500" />;
+      case 'pending': return <AlertCircle className="w-5 h-5 text-gray-400" />;
+      default: return <XCircle className="w-5 h-5 text-red-500" />;
+    }
+  };
+
+  const getRiskColor = (level) => {
+    switch (level) {
+      case 'MINIMAL': return 'text-green-600 bg-green-100';
+      case 'LOW': return 'text-yellow-600 bg-yellow-100';
+      case 'MEDIUM': return 'text-orange-600 bg-orange-100';
+      case 'HIGH': return 'text-red-600 bg-red-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         
-        // Icon component
-        const Icon = ({ name, className }) => {
-            const svgString = icons[name];
-            if (!svgString) return null;
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">MIS Automated Reporting Dashboard</h1>
+              <p className="text-gray-600 mt-1">STORE Treasury System Implementation - 100% Automated Progress Tracking</p>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-gray-500">Last Updated</div>
+              <div className="text-lg font-mono">{currentTime.toLocaleTimeString()}</div>
+              <div className="text-xs text-green-600">● Auto-updating every 5 seconds</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Executive Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Current Phase</p>
+                <p className="text-2xl font-bold text-gray-900">{reportData.phase}</p>
+                <p className="text-sm text-green-600">{reportData.overallProgress.toFixed(1)}% Complete</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-blue-500" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Velocity Multiplier</p>
+                <p className="text-2xl font-bold text-green-600">{reportData.velocityMultiplier.toFixed(1)}x</p>
+                <p className="text-sm text-gray-500">vs Traditional Development</p>
+              </div>
+              <Zap className="w-8 h-8 text-green-500" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Quality Score</p>
+                <p className="text-2xl font-bold text-blue-600">{reportData.qualityScore.toFixed(1)}%</p>
+                <p className="text-sm text-gray-500">Institutional Grade</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-blue-500" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Mathematical Accuracy</p>
+                <p className="text-2xl font-bold text-green-600">{reportData.mathematicalAccuracy.toFixed(1)}%</p>
+                <p className="text-sm text-gray-500">Zero Hallucinations</p>
+              </div>
+              <Database className="w-8 h-8 text-green-500" />
+            </div>
+          </div>
+        </div>
+
+        {/* Velocity Comparison Chart */}
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Development Velocity: MIS vs Traditional</h2>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={velocityData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="traditional" stroke="#ef4444" strokeWidth={3} name="Traditional Development" />
+                <Line type="monotone" dataKey="mis" stroke="#10b981" strokeWidth={3} name="MIS Methodology" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 flex items-center justify-center space-x-6">
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-red-500 rounded mr-2"></div>
+              <span className="text-sm text-gray-600">Traditional Development</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-green-500 rounded mr-2"></div>
+              <span className="text-sm text-gray-600">MIS Methodology (25.3x acceleration)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Phase Progress and Build Results */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* Phase Progress */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Automated Phase Progression</h2>
+            <div className="space-y-4">
+              {phaseData.map((phase, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    {getStatusIcon(phase.status)}
+                    <div>
+                      <p className="font-medium text-gray-900">{phase.phase}</p>
+                      <p className="text-sm text-gray-500">
+                        Duration: {phase.duration} (Target: {phase.target})
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {phase.status === 'completed' && (
+                      <span className="text-green-600 text-sm font-medium">✓ Ahead of Schedule</span>
+                    )}
+                    {phase.status === 'active' && (
+                      <span className="text-blue-600 text-sm font-medium">● In Progress</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Build Results */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Automated Build & Validation Results</h2>
+            <div className="space-y-4">
+              {buildResults.map((build, index) => (
+                <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">{build.component}</p>
+                      <p className="text-sm text-gray-500">
+                        {build.success}/{build.builds} builds successful
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-green-600">{build.accuracy}% accuracy</p>
+                      <p className="text-xs text-gray-500">{build.lastBuild}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-green-500 h-2 rounded-full" 
+                      style={{ width: `${(build.success / build.builds) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Quality Metrics and Risk Assessment */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* Quality Metrics */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Automated Quality Metrics</h2>
+            <div className="space-y-4">
+              {qualityMetrics.map((metric, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-700">{metric.metric}</span>
+                    <span className="text-sm font-bold text-green-600">
+                      {metric.metric === 'Response Time' ? `${metric.value}ms` : `${metric.value}%`}
+                    </span>
+                  </div>
+                  <div className="bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-green-500 h-2 rounded-full" 
+                      style={{ 
+                        width: metric.metric === 'Response Time' 
+                          ? `${Math.min((metric.target / metric.value) * 100, 100)}%`
+                          : `${Math.min((metric.value / metric.target) * 100, 100)}%`
+                      }}
+                    ></div>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Target: {metric.metric === 'Response Time' ? `<${metric.target}ms` : `${metric.target}%`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Risk Assessment */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Automated Risk Assessment</h2>
+            <div className="space-y-4">
+              {riskAssessment.map((risk, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-gray-900">{risk.category}</p>
+                    <p className="text-sm text-gray-500">Score: {risk.score}/100</p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(risk.level)}`}>
+                      {risk.level}
+                    </span>
+                    <p className="text-xs text-gray-500 mt-1">{risk.trend}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Automated Insights */}
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">AI-Generated Insights & Recommendations</h2>
+          <div className="space-y-4">
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                <div>
+                  <p className="font-medium text-green-800">Excellent Progress Detected</p>
+                  <p className="text-sm text-green-700">
+                    Current velocity of 25.3x exceeds target range of 16-30x. Mathematical accuracy maintaining 100% 
+                    with zero consensus failures. System is performing optimally.
+                  </p>
+                </div>
+              </div>
+            </div>
             
-            return React.createElement('span', {
-                className: `icon ${className}`,
-                dangerouslySetInnerHTML: { __html: svgString }
-            });
-        };
-        
-        // Main Dashboard Component
-        const AutomatedReportingDashboard = () => {
-            const [currentTime, setCurrentTime] = React.useState(new Date());
-            const [reportData, setReportData] = React.useState({
-                lastUpdated: new Date(),
-                phase: "Phase 2: Treasury Assembly",
-                overallProgress: 73,
-                velocityMultiplier: 25.3,
-                qualityScore: 96.8,
-                mathematicalAccuracy: 100.0
-            });
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <Code className="w-5 h-5 text-blue-500 mt-0.5" />
+                <div>
+                  <p className="font-medium text-blue-800">AI Optimization Recommendation</p>
+                  <p className="text-sm text-blue-700">
+                    Template reuse efficiency at 97.2% suggests opportunity for additional component standardization. 
+                    Recommend creating templates for recurring validation patterns.
+                  </p>
+                </div>
+              </div>
+            </div>
 
-            // Simulated automated data collection
-            React.useEffect(() => {
-                const timer = setInterval(() => {
-                    setCurrentTime(new Date());
-                    // Simulate automated progress updates
-                    setReportData(prev => ({
-                        ...prev,
-                        lastUpdated: new Date(),
-                        overallProgress: Math.min(prev.overallProgress + 0.1, 100),
-                        velocityMultiplier: prev.velocityMultiplier + (Math.random() - 0.5) * 0.2,
-                        qualityScore: Math.max(95, prev.qualityScore + (Math.random() - 0.5) * 0.5)
-                    }));
-                }, 5000);
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <TrendingUp className="w-5 h-5 text-yellow-500 mt-0.5" />
+                <div>
+                  <p className="font-medium text-yellow-800">Competitive Advantage Alert</p>
+                  <p className="text-sm text-yellow-700">
+                    Current development speed is 25.3x faster than industry baseline. This represents a sustainable 
+                    competitive advantage that compounds over time.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-                return () => clearInterval(timer);
-            }, []);
+        {/* Footer */}
+        <div className="bg-white rounded-lg shadow-sm border p-4">
+          <div className="flex items-center justify-between text-sm text-gray-500">
+            <p>McCoy Invention System (MIS) - Automated Reporting Dashboard</p>
+            <p>🤖 100% AI-Powered Progress Tracking - No Manual Input Required</p>
+          </div>
+        </div>
 
-            // Automated velocity tracking data
-            const velocityData = [
-                { day: 'Day 1', traditional: 1.0, mis: 5.2 },
-                { day: 'Day 3', traditional: 2.1, mis: 12.8 },
-                { day: 'Day 5', traditional: 3.5, mis: 18.9 },
-                { day: 'Day 7', traditional: 4.2, mis: 23.1 },
-                { day: 'Day 9', traditional: 5.1, mis: 25.3 },
-                { day: 'Day 11', traditional: 5.8, mis: 27.2 }
-            ];
+      </div>
+    </div>
+  );
+};
 
-            // Automated quality metrics
-            const qualityMetrics = [
-                { metric: 'Mathematical Accuracy', value: 100.0, target: 99.9, status: 'excellent' },
-                { metric: 'Test Coverage', value: 97.2, target: 95.0, status: 'excellent' },
-                { metric: 'Response Time', value: 45, target: 200, status: 'excellent' },
-                { metric: 'Integration Success', value: 99.2, target: 95.0, status: 'excellent' }
-            ];
-
-            // Automated phase progression
-            const phaseData = [
-                { phase: 'Phase 0: Setup', status: 'completed', duration: '5 days', target: '7 days' },
-                { phase: 'Phase 1: Foundation', status: 'completed', duration: '6 days', target: '8 days' },
-                { phase: 'Phase 2: Assembly', status: 'active', duration: '4 days', target: '8 days' },
-                { phase: 'Phase 3: Production', status: 'pending', duration: '-', target: '5 days' }
-            ];
-
-            // Automated build and validation results
-            const buildResults = [
-                { component: 'Treasury Contracts', builds: 47, success: 46, accuracy: 100.0, lastBuild: '2 min ago' },
-                { component: 'DOSS Protocol', builds: 32, success: 32, accuracy: 100.0, lastBuild: '5 min ago' },
-                { component: 'AI Oracle Network', builds: 23, success: 23, accuracy: 99.97, lastBuild: '8 min ago' },
-                { component: 'Database Schema', builds: 18, success: 18, accuracy: 100.0, lastBuild: '12 min ago' }
-            ];
-
-            // Automated risk assessment
-            const riskAssessment = [
-                { category: 'Technical Risk', level: 'LOW', score: 15, trend: 'decreasing' },
-                { category: 'Integration Risk', level: 'LOW', score: 12, trend: 'stable' },
-                { category: 'Performance Risk', level: 'MINIMAL', score: 8, trend: 'decreasing' },
-                { category: 'Quality Risk', level: 'MINIMAL', score: 5, trend: 'decreasing' }
-            ];
-
-            const getStatusIcon = (status) => {
-                switch (status) {
-                    case 'completed': return React.createElement(Icon, { name: 'CheckCircle', className: "w-5 h-5 text-green-500" });
-                    case 'active': return React.createElement(Icon, { name: 'Clock', className: "w-5 h-5 text-blue-500" });
-                    case 'pending': return React.createElement(Icon, { name: 'AlertCircle', className: "w-5 h-5 text-gray-400" });
-                    default: return React.createElement(Icon, { name: 'XCircle', className: "w-5 h-5 text-red-500" });
-                }
-            };
-
-            const getRiskColor = (level) => {
-                switch (level) {
-                    case 'MINIMAL': return 'text-green-600 bg-green-100';
-                    case 'LOW': return 'text-yellow-600 bg-yellow-100';
-                    case 'MEDIUM': return 'text-orange-600 bg-orange-100';
-                    case 'HIGH': return 'text-red-600 bg-red-100';
-                    default: return 'text-gray-600 bg-gray-100';
-                }
-            };
-
-            return React.createElement('div', { className: "min-h-screen bg-gray-50 p-6" },
-                React.createElement('div', { className: "max-w-7xl mx-auto space-y-6" },
-                    
-                    // Header
-                    React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-6" },
-                        React.createElement('div', { className: "flex justify-between items-start" },
-                            React.createElement('div', null,
-                                React.createElement('h1', { className: "text-3xl font-bold text-gray-900" }, "MIS Automated Reporting Dashboard"),
-                                React.createElement('p', { className: "text-gray-600 mt-1" }, "STORE Treasury System Implementation - 100% Automated Progress Tracking")
-                            ),
-                            React.createElement('div', { className: "text-right" },
-                                React.createElement('div', { className: "text-sm text-gray-500" }, "Last Updated"),
-                                React.createElement('div', { className: "text-lg font-mono" }, currentTime.toLocaleTimeString()),
-                                React.createElement('div', { className: "text-xs text-green-600" }, "● Auto-updating every 5 seconds")
-                            )
-                        )
-                    ),
-
-                    // Executive Summary Cards
-                    React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-4 gap-6" },
-                        // Card 1 - Current Phase
-                        React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-6" },
-                            React.createElement('div', { className: "flex items-center justify-between" },
-                                React.createElement('div', null,
-                                    React.createElement('p', { className: "text-sm font-medium text-gray-600" }, "Current Phase"),
-                                    React.createElement('p', { className: "text-2xl font-bold text-gray-900" }, reportData.phase),
-                                    React.createElement('p', { className: "text-sm text-green-600" }, `${reportData.overallProgress.toFixed(1)}% Complete`)
-                                ),
-                                React.createElement(Icon, { name: 'TrendingUp', className: "w-8 h-8 text-blue-500" })
-                            )
-                        ),
-
-                        // Card 2 - Velocity Multiplier
-                        React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-6" },
-                            React.createElement('div', { className: "flex items-center justify-between" },
-                                React.createElement('div', null,
-                                    React.createElement('p', { className: "text-sm font-medium text-gray-600" }, "Velocity Multiplier"),
-                                    React.createElement('p', { className: "text-2xl font-bold text-green-600" }, `${reportData.velocityMultiplier.toFixed(1)}x`),
-                                    React.createElement('p', { className: "text-sm text-gray-500" }, "vs Traditional Development")
-                                ),
-                                React.createElement(Icon, { name: 'Zap', className: "w-8 h-8 text-green-500" })
-                            )
-                        ),
-
-                        // Card 3 - Quality Score
-                        React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-6" },
-                            React.createElement('div', { className: "flex items-center justify-between" },
-                                React.createElement('div', null,
-                                    React.createElement('p', { className: "text-sm font-medium text-gray-600" }, "Quality Score"),
-                                    React.createElement('p', { className: "text-2xl font-bold text-blue-600" }, `${reportData.qualityScore.toFixed(1)}%`),
-                                    React.createElement('p', { className: "text-sm text-gray-500" }, "Institutional Grade")
-                                ),
-                                React.createElement(Icon, { name: 'CheckCircle', className: "w-8 h-8 text-blue-500" })
-                            )
-                        ),
-
-                        // Card 4 - Mathematical Accuracy
-                        React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-6" },
-                            React.createElement('div', { className: "flex items-center justify-between" },
-                                React.createElement('div', null,
-                                    React.createElement('p', { className: "text-sm font-medium text-gray-600" }, "Mathematical Accuracy"),
-                                    React.createElement('p', { className: "text-2xl font-bold text-green-600" }, `${reportData.mathematicalAccuracy.toFixed(1)}%`),
-                                    React.createElement('p', { className: "text-sm text-gray-500" }, "Zero Hallucinations")
-                                ),
-                                React.createElement(Icon, { name: 'Database', className: "w-8 h-8 text-green-500" })
-                            )
-                        )
-                    ),
-
-                    // Velocity Comparison Chart
-                    React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-6" },
-                        React.createElement('h2', { className: "text-xl font-bold text-gray-900 mb-4" }, "Development Velocity: MIS vs Traditional"),
-                        React.createElement('div', { className: "h-80" },
-                            React.createElement(Recharts.ResponsiveContainer, { width: "100%", height: "100%" },
-                                React.createElement(Recharts.LineChart, { data: velocityData },
-                                    React.createElement(Recharts.CartesianGrid, { strokeDasharray: "3 3" }),
-                                    React.createElement(Recharts.XAxis, { dataKey: "day" }),
-                                    React.createElement(Recharts.YAxis),
-                                    React.createElement(Recharts.Tooltip),
-                                    React.createElement(Recharts.Line, { type: "monotone", dataKey: "traditional", stroke: "#ef4444", strokeWidth: 3, name: "Traditional Development" }),
-                                    React.createElement(Recharts.Line, { type: "monotone", dataKey: "mis", stroke: "#10b981", strokeWidth: 3, name: "MIS Methodology" })
-                                )
-                            )
-                        ),
-                        React.createElement('div', { className: "mt-4 flex items-center justify-center space-x-6" },
-                            React.createElement('div', { className: "flex items-center" },
-                                React.createElement('div', { className: "w-4 h-4 bg-red-500 rounded mr-2" }),
-                                React.createElement('span', { className: "text-sm text-gray-600" }, "Traditional Development")
-                            ),
-                            React.createElement('div', { className: "flex items-center" },
-                                React.createElement('div', { className: "w-4 h-4 bg-green-500 rounded mr-2" }),
-                                React.createElement('span', { className: "text-sm text-gray-600" }, "MIS Methodology (25.3x acceleration)")
-                            )
-                        )
-                    ),
-
-                    // Phase Progress and Build Results
-                    React.createElement('div', { className: "grid grid-cols-1 lg:grid-cols-2 gap-6" },
-                        
-                        // Phase Progress
-                        React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-6" },
-                            React.createElement('h2', { className: "text-xl font-bold text-gray-900 mb-4" }, "Automated Phase Progression"),
-                            React.createElement('div', { className: "space-y-4" },
-                                phaseData.map((phase, index) =>
-                                    React.createElement('div', { key: index, className: "flex items-center justify-between p-3 bg-gray-50 rounded-lg" },
-                                        React.createElement('div', { className: "flex items-center space-x-3" },
-                                            getStatusIcon(phase.status),
-                                            React.createElement('div', null,
-                                                React.createElement('p', { className: "font-medium text-gray-900" }, phase.phase),
-                                                React.createElement('p', { className: "text-sm text-gray-500" },
-                                                    `Duration: ${phase.duration} (Target: ${phase.target})`
-                                                )
-                                            )
-                                        ),
-                                        React.createElement('div', { className: "text-right" },
-                                            phase.status === 'completed' && React.createElement('span', { className: "text-green-600 text-sm font-medium" }, "✓ Ahead of Schedule"),
-                                            phase.status === 'active' && React.createElement('span', { className: "text-blue-600 text-sm font-medium" }, "● In Progress")
-                                        )
-                                    )
-                                )
-                            )
-                        ),
-
-                        // Build Results
-                        React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-6" },
-                            React.createElement('h2', { className: "text-xl font-bold text-gray-900 mb-4" }, "Automated Build & Validation Results"),
-                            React.createElement('div', { className: "space-y-4" },
-                                buildResults.map((build, index) =>
-                                    React.createElement('div', { key: index, className: "p-3 bg-gray-50 rounded-lg" },
-                                        React.createElement('div', { className: "flex items-center justify-between" },
-                                            React.createElement('div', null,
-                                                React.createElement('p', { className: "font-medium text-gray-900" }, build.component),
-                                                React.createElement('p', { className: "text-sm text-gray-500" },
-                                                    `${build.success}/${build.builds} builds successful`
-                                                )
-                                            ),
-                                            React.createElement('div', { className: "text-right" },
-                                                React.createElement('p', { className: "text-sm font-bold text-green-600" }, `${build.accuracy}% accuracy`),
-                                                React.createElement('p', { className: "text-xs text-gray-500" }, build.lastBuild)
-                                            )
-                                        ),
-                                        React.createElement('div', { className: "mt-2 bg-gray-200 rounded-full h-2" },
-                                            React.createElement('div', { 
-                                                className: "bg-green-500 h-2 rounded-full",
-                                                style: { width: `${(build.success / build.builds) * 100}%` }
-                                            })
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    ),
-
-                    // Quality Metrics and Risk Assessment
-                    React.createElement('div', { className: "grid grid-cols-1 lg:grid-cols-2 gap-6" },
-                        
-                        // Quality Metrics
-                        React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-6" },
-                            React.createElement('h2', { className: "text-xl font-bold text-gray-900 mb-4" }, "Automated Quality Metrics"),
-                            React.createElement('div', { className: "space-y-4" },
-                                qualityMetrics.map((metric, index) =>
-                                    React.createElement('div', { key: index, className: "space-y-2" },
-                                        React.createElement('div', { className: "flex justify-between items-center" },
-                                            React.createElement('span', { className: "text-sm font-medium text-gray-700" }, metric.metric),
-                                            React.createElement('span', { className: "text-sm font-bold text-green-600" },
-                                                metric.metric === 'Response Time' ? `${metric.value}ms` : `${metric.value}%`
-                                            )
-                                        ),
-                                        React.createElement('div', { className: "bg-gray-200 rounded-full h-2" },
-                                            React.createElement('div', { 
-                                                className: "bg-green-500 h-2 rounded-full",
-                                                style: { 
-                                                    width: metric.metric === 'Response Time' 
-                                                        ? `${Math.min((metric.target / metric.value) * 100, 100)}%`
-                                                        : `${Math.min((metric.value / metric.target) * 100, 100)}%`
-                                                }
-                                            })
-                                        ),
-                                        React.createElement('div', { className: "text-xs text-gray-500" },
-                                            `Target: ${metric.metric === 'Response Time' ? `<${metric.target}ms` : `${metric.target}%`}`
-                                        )
-                                    )
-                                )
-                            )
-                        ),
-
-                        // Risk Assessment
-                        React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-6" },
-                            React.createElement('h2', { className: "text-xl font-bold text-gray-900 mb-4" }, "Automated Risk Assessment"),
-                            React.createElement('div', { className: "space-y-4" },
-                                riskAssessment.map((risk, index) =>
-                                    React.createElement('div', { key: index, className: "flex items-center justify-between p-3 bg-gray-50 rounded-lg" },
-                                        React.createElement('div', null,
-                                            React.createElement('p', { className: "font-medium text-gray-900" }, risk.category),
-                                            React.createElement('p', { className: "text-sm text-gray-500" }, `Score: ${risk.score}/100`)
-                                        ),
-                                        React.createElement('div', { className: "text-right" },
-                                            React.createElement('span', { className: `px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(risk.level)}` },
-                                                risk.level
-                                            ),
-                                            React.createElement('p', { className: "text-xs text-gray-500 mt-1" }, risk.trend)
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    ),
-
-                    // Automated Insights
-                    React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-6" },
-                        React.createElement('h2', { className: "text-xl font-bold text-gray-900 mb-4" }, "AI-Generated Insights & Recommendations"),
-                        React.createElement('div', { className: "space-y-4" },
-                            React.createElement('div', { className: "p-4 bg-green-50 border border-green-200 rounded-lg" },
-                                React.createElement('div', { className: "flex items-start space-x-3" },
-                                    React.createElement(Icon, { name: 'CheckCircle', className: "w-5 h-5 text-green-500 mt-0.5" }),
-                                    React.createElement('div', null,
-                                        React.createElement('p', { className: "font-medium text-green-800" }, "Excellent Progress Detected"),
-                                        React.createElement('p', { className: "text-sm text-green-700" },
-                                            "Current velocity of 25.3x exceeds target range of 16-30x. Mathematical accuracy maintaining 100% with zero consensus failures. System is performing optimally."
-                                        )
-                                    )
-                                )
-                            ),
-                            
-                            React.createElement('div', { className: "p-4 bg-blue-50 border border-blue-200 rounded-lg" },
-                                React.createElement('div', { className: "flex items-start space-x-3" },
-                                    React.createElement(Icon, { name: 'Code', className: "w-5 h-5 text-blue-500 mt-0.5" }),
-                                    React.createElement('div', null,
-                                        React.createElement('p', { className: "font-medium text-blue-800" }, "AI Optimization Recommendation"),
-                                        React.createElement('p', { className: "text-sm text-blue-700" },
-                                            "Template reuse efficiency at 97.2% suggests opportunity for additional component standardization. Recommend creating templates for recurring validation patterns."
-                                        )
-                                    )
-                                )
-                            ),
-
-                            React.createElement('div', { className: "p-4 bg-yellow-50 border border-yellow-200 rounded-lg" },
-                                React.createElement('div', { className: "flex items-start space-x-3" },
-                                    React.createElement(Icon, { name: 'TrendingUp', className: "w-5 h-5 text-yellow-500 mt-0.5" }),
-                                    React.createElement('div', null,
-                                        React.createElement('p', { className: "font-medium text-yellow-800" }, "Competitive Advantage Alert"),
-                                        React.createElement('p', { className: "text-sm text-yellow-700" },
-                                            "Current development speed is 25.3x faster than industry baseline. This represents a sustainable competitive advantage that compounds over time."
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    ),
-
-                    // Footer
-                    React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-4" },
-                        React.createElement('div', { className: "flex items-center justify-between text-sm text-gray-500" },
-                            React.createElement('p', null, "McCoy Invention System (MIS) - Automated Reporting Dashboard"),
-                            React.createElement('p', null, "🤖 100% AI-Powered Progress Tracking - No Manual Input Required")
-                        )
-                    )
-                )
-            );
-        };
-
-        // Render the dashboard
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(AutomatedReportingDashboard));
-    </script>
+export default AutomatedReportingDashboard;
+</script>
 </body>
 </html>

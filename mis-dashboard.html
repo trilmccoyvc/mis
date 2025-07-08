@@ -15,10 +15,6 @@
 <body class="bg-gray-50">
 <div id="root"></div>
 <script type="text/babel">
-import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { CheckCircle, AlertCircle, XCircle, Clock, TrendingUp, Code, Database, Zap } from 'lucide-react';
-
 const AutomatedReportingDashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [reportData, setReportData] = useState({
